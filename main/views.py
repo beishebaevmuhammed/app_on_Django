@@ -4,12 +4,10 @@ from goods.models import Categories
 
 
 def index(request):
-    categories = Categories.objects.all()
-
     context = {
         'title': 'Home - Главная страница',
         'content': 'Магазин мебели HOME',
-        'categories': categories
+
     }
 
     return render(request, 'main/index.html', context)
@@ -23,5 +21,3 @@ def about(request):
     }
 
     return render(request, 'main/about.html', context)
-
-
