@@ -18,7 +18,6 @@ class Categories(models.Model):
 
 
 class Products(models.Model):
-    product_id = models.AutoField(primary_key=True, verbose_name='ID')
     name = models.CharField(max_length=150, unique=True, verbose_name='Название')
     slug = models.SlugField(max_length=200, unique=True, blank=True, null=True, verbose_name='URL')
     description = models.TextField(verbose_name='Описание', blank=True, null=True)
