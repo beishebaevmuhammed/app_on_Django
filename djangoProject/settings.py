@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'main',
     'goods',
     'users',
+    'carts',
+    'orders',
 
 ]
 
@@ -120,7 +122,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'ru-ru'
 
-TIME_ZONE = 'Asia/Bishkek'
+TIME_ZONE = 'Asia'
 
 USE_I18N = True
 
@@ -133,7 +135,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    BASE_DIR / "static"
 ]
 
 MEDIA_URL = 'media/'
@@ -150,3 +152,4 @@ INTERNAL_IPS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
+LOGIN_URL = '/user/login/'
