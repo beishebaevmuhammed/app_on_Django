@@ -1,9 +1,10 @@
 from django.db import models
 from goods.models import Products
+
 from users.models import User
 
 
-class OrderItemQueryset(models.QuerySet):
+class OrderitemQueryset(models.QuerySet):
 
     def total_price(self):
         return sum(cart.products_price() for cart in self)
@@ -16,7 +17,7 @@ class OrderItemQueryset(models.QuerySet):
 
 class Order(models.Model):
     user = models.ForeignKey(to=User, on_delete=models.SET_DEFAULT, blank=True, null=True, verbose_name="Пользователь",
-                             default=1)
+                             default=None)
     created_timestamp = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания заказа")
     phone_number = models.CharField(max_length=20, verbose_name="Номер телефона")
     requires_delivery = models.BooleanField(default=False, verbose_name="Требуется доставка")
@@ -48,7 +49,7 @@ class OrderItem(models.Model):
         verbose_name = "Проданный товар"
         verbose_name_plural = "Проданные товары"
 
-    objects = OrderItemQueryset.as_manager()
+    objects = OrderitemQueryset.as_manager()
 
     def products_price(self):
         return round(self.product.sell_price() * self.quantity, 2)

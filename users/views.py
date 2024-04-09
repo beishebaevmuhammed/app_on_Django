@@ -1,11 +1,13 @@
-from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
+from django.contrib import auth, messages
+from django.db.models import Prefetch
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse
-
 from carts.models import Cart
-from users.forms import UserLoginForm, UserRegistrationForm, UserProfileForm
+from orders.models import Order, OrderItem
+
+from users.forms import UserProfileForm, UserLoginForm, UserRegistrationForm
 
 
 def login(request):
@@ -20,13 +22,14 @@ def login(request):
 
             if user:
                 auth.login(request, user)
-                messages.success(request, f'{request.user.username}, Вы успешно авторизовались')
+                messages.success(request, f"{username}, Вы вошли в аккаунт")
 
                 if session_key:
                     Cart.objects.filter(session_key=session_key).update(user=user)
 
-                if request.POST.get('next', None):
-                    return HttpResponseRedirect(request.POST('next'))
+                redirect_page = request.POST.get('next', None)
+                if redirect_page and redirect_page != reverse('user:logout'):
+                    return HttpResponseRedirect(request.POST.get('next'))
 
                 return HttpResponseRedirect(reverse('main:index'))
     else:
@@ -52,17 +55,14 @@ def registration(request):
 
             if session_key:
                 Cart.objects.filter(session_key=session_key).update(user=user)
-
-            messages.success(request, f'{request.user.username}, Вы успешно зарегистрировались')
+                messages.success(request, f"{user.username}, Вы успешно зарегистрированы и вошли в аккаунт")
             return HttpResponseRedirect(reverse('main:index'))
-
     else:
         form = UserRegistrationForm()
 
     context = {
         'title': 'Home - Регистрация',
         'form': form
-
     }
     return render(request, 'users/registration.html', context)
 
@@ -70,20 +70,25 @@ def registration(request):
 @login_required
 def profile(request):
     if request.method == 'POST':
-        form = UserProfileForm(data=request.POST,
-                               instance=request.user,
-                               files=request.FILES)
+        form = UserProfileForm(data=request.POST, instance=request.user, files=request.FILES)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Вы успешно отредактировали профиль')
-            return HttpResponseRedirect(reverse('users:profile'))
-
+            messages.success(request, "Профайл успешно обновлен")
+            return HttpResponseRedirect(reverse('user:profile'))
     else:
         form = UserProfileForm(instance=request.user)
 
+    orders = Order.objects.filter(user=request.user).prefetch_related(
+        Prefetch(
+            "order_items",
+            queryset=OrderItem.objects.select_related("product_id"),
+        )
+    ).order_by("id")
+
     context = {
-        'title': 'Home - Профиль',
-        'form': form
+        'title': 'Home - Кабинет',
+        'form': form,
+        'orders': orders,
     }
     return render(request, 'users/profile.html', context)
 
@@ -94,6 +99,6 @@ def users_cart(request):
 
 @login_required
 def logout(request):
-    messages.success(request, f'{request.user.username}, Вы вышли из аккаунта')
+    messages.success(request, f"{request.user.username}, Вы вышли из аккаунта")
     auth.logout(request)
     return redirect(reverse('main:index'))
